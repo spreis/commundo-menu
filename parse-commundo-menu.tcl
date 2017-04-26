@@ -3,11 +3,16 @@
 # Name und Version dieses Skripts einstellen
 # ---------------------------------------------------------------------------------------------------------
 #
+set progHomeFolder [ file dirname  $argv0 ]
 set progName [ file rootname [ file tail $argv0 ] ]
 set progVers 0.1.0
 
-set progHeadline "Übersicht über Deploymentaktivitäten"
-append progHeadline \n "in den Umgebungen"
+set progHeadline {
+Download der PDF-Datei mit der Speisekarte,
+raten wo was steht und Ausgabe der Gerichte
+im von der lunchtime-app benötigten Format.
+}
+
 wm title . "$progName - $progVers"
 
 set versHist {
@@ -63,16 +68,7 @@ proc show varname {
 # Pakete, die wir benötigen
 # ---------------------------------------------------------------------------------------------------------
 #
-set     vm_tools      $env(VM_TOOLS)
-lappend auto_path [ file join "$vm_tools" Tcl lib local ]
-lappend auto_path [ file join "$vm_tools" Helper tcl lib ]
-
-package require mrutil
-package require tdom
 package require http
-package require base64
-package require tablelist
-package require logwin
 #
 #==========================================================================================================
 
@@ -84,18 +80,9 @@ package require logwin
 # Allgemeine Definitionen/Initialisierungen (Konstanten)
 # ---------------------------------------------------------------------------------------------------------
 #
-set ta_base       $env(TA_BASE)
-set ta_target		$env(TA_TARGET)
-set ProgramFiles	{C:\Program Files}
 set helpURL 		https://topedia.telekom.de/display/ITPTDP/$::progName
 set helpURL 		https://topedia.telekom.de/x/A6GSAw
-
-set svn             [ file join $vm_tools Svn  svn.exe ]
-set tsvn            [ file join $ProgramFiles TortoiseSVN bin TortoiseProc.exe ]
-
-if { [ catch { set repoURL $env(MR_REPOURL) } ] } { 
-	set repoURL https://ths.repository.amp.intra.t-online.de/thsmita
-}
+set helpURL 		https://github.com/spreis/commundo-menu
 #
 #==========================================================================================================
 
@@ -124,10 +111,8 @@ if { [ catch { set repoURL $env(MR_REPOURL) } ] } {
      }
  }
 
-set updateCycleMinutesDefault 20
-getopt argv -updateCycleMinutes updateCycleMinutes $updateCycleMinutesDefault
-getopt argv -excludeEnvironments excludeEnvironments ""
-set excludeEnvironmentsList [ split $excludeEnvironments ]
+set noAutostartDefault 0
+getopt argv -noAutostart noAutostart $noAutostartDefault
 #
 #==========================================================================================================
 
@@ -136,7 +121,8 @@ set excludeEnvironmentsList [ split $excludeEnvironments ]
 
 
 #==========================================================================================================
-# Allgemeine Initialisierung mit Progressbar
+# Allgemeine Initialisierung mit Progressbar - so etwas haben wir hier nicht.
+# Das Template darf noch eine Weile hier stehen bleiben.
 # ---------------------------------------------------------------------------------------------------------
 #
 set cmdList \
@@ -152,22 +138,28 @@ set cmdList \
 #
 # ---------------------------------------------------------------------------------------------------------
 #
-set Progress 0
-set ProgressMax 400
+set cmdList ""
+#
+# ---------------------------------------------------------------------------------------------------------
+#
+if [ llength $cmdList ] {
+	set Progress 0
+	set ProgressMax 400
 
-set nrOfInitSteps [ expr { [ llength $cmdList ] / 2 } ]
-set ProgressInc   [ expr { $ProgressMax / ( $nrOfInitSteps ) } ]
+	set nrOfInitSteps [ expr { [ llength $cmdList ] / 2 } ]
+	set ProgressInc   [ expr { $ProgressMax / ( $nrOfInitSteps ) } ]
 
-grid [ttk::frame .p -padding 50  ] -padx 5 -pady 5 -column 0 -row 0 -sticky nwes
-grid [ttk::label .p.barLabel -textvariable WhatsUp] -column 0 -row 0  -sticky w
-grid [ttk::progressbar .p.bar -orient horizontal -length $ProgressMax -maximum $ProgressMax -mode determinate -variable Progress] -column 0 -row 1  -sticky w
+	grid [ttk::frame .p -padding 50  ] -padx 5 -pady 5 -column 0 -row 0 -sticky nwes
+	grid [ttk::label .p.barLabel -textvariable WhatsUp] -column 0 -row 0  -sticky w
+	grid [ttk::progressbar .p.bar -orient horizontal -length $ProgressMax -maximum $ProgressMax -mode determinate -variable Progress] -column 0 -row 1  -sticky w
 
-foreach { WhatsUp initCmd } $cmdList {
-	incr Progress $ProgressInc ; update
-	eval $initCmd
+	foreach { WhatsUp initCmd } $cmdList {
+		incr Progress $ProgressInc ; update
+		eval $initCmd
+	}
+
+	grid forget .p
 }
-
-grid forget .p
 #
 #==========================================================================================================
 
@@ -203,14 +195,14 @@ grid    rowconfigure . 3 -weight 1
 # Elemente im .h-Teil (Header) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-image create photo programIcon -file [ file join $vm_tools pic Porthole-Bulls-Eye-icon.gif ]
+image create photo programIcon -file [ file join $progHomeFolder Dish-Pasta-Spaghetti-icon.png ]
 font create headerFont -family Helvetica -size 11 
 ttk::style configure header.TLabel -background white -foreground #ac9753 -font headerFont
 font create pnameFont -family Helvetica -size 12 -weight bold
 ttk::style configure pname.TLabel -background white -foreground #ac9753 -font pnameFont
 
 grid [ttk::label .h.pname -text $progName -style pname.TLabel -padding 4 ] 	 -column 0 -row 2 -sticky nsew
-grid [ttk::label .h.header -text $progHeadline -style header.TLabel -padding 4 ] 	 -column 0 -row 3 -sticky nsew
+grid [ttk::label .h.header -text [ string trim $progHeadline ] -style header.TLabel -padding 4 ] 	 -column 0 -row 3 -sticky nsew
 grid [ttk::label .h.icon -image  programIcon -style header.TLabel  ] 	 -column 1 -row 2 -rowspan 2 -sticky nsew
 bind .h.icon <ButtonRelease-1> iconClicked
 
@@ -257,10 +249,11 @@ proc showHistoryInformation {} {
 #
 set p .i		;# p wie Parent
 
-set w $p.dStripLBL
-label					$w
-bind					$w <ButtonRelease-1> "grid forget $w"
-set dStripLBL			$w
+set w $p.fromUrlLBL
+label					$w -text Url
+grid					$w -column 1 -row 1 -padx 2 -pady 2 -sticky nsew
+
+vwait forever
 
 set w $p.tf		;# w wie Widget, um das es geht und tf wie TableFrame
 ttk::labelframe			$w -text Übersicht -padding 4
