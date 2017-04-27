@@ -1,4 +1,4 @@
-#!/usr/bin/wish
+#!/usr/bin/env wish
 #==========================================================================================================
 # Name und Version dieses Skripts einstellen
 # ---------------------------------------------------------------------------------------------------------
@@ -249,36 +249,21 @@ proc showHistoryInformation {} {
 #
 set p .i		;# p wie Parent
 
-set w $p.fromUrlLBL
+set w $p.pdfUrlLBL
 label					$w -text Url
 grid					$w -column 1 -row 1 -padx 2 -pady 2 -sticky nsew
 
+set kw 14
+set pdfName             Darmstadt_Speiseplan_$kw.KW.pdf
+set pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$pdfName
+
+set w $p.pdfUrlENT
+entry					$w -textvariable pdfUrl -width 80 -justify right
+grid					$w -column 2 -row 1 -padx 2 -pady 2 -sticky nsew
+$w						xview moveto 1.0
+
+exec wget $pdfUrl
 vwait forever
-
-set w $p.tf		;# w wie Widget, um das es geht und tf wie TableFrame
-ttk::labelframe			$w -text Übersicht -padding 4
-grid					$w -column 1 -row 1 -padx 2 -pady 2 -sticky nsew
-grid columnconfigure	$p 1 -weight 1
-grid rowconfigure 		$p 1 -weight 1
-
-
-set p $w
-set w $p.dTBL;# w wie Widget, um das es geht und dTBL wie DeploymentTabelle
-set s $p.dVSB;# w wie Widget, um das es geht und dVSB wie VerticalScrollbar
-
-set deplColHead [ list 12 Umgebung left 12 Bearbeiter left 16 Zeitstempel left 16 Release left 7 Version center 25 Modul left ]
-
-tablelist::tablelist	$w -columns $deplColHead -selectmode browse -width 100 -height 16 -labelcommand tablelist::sortByColumn -yscrollcommand "$s set" 
-grid 			$w -column 1 -row 1 -padx "2 0" -sticky nsew
-bind			$w <<ListboxSelect>> lineInDeplTableSelected
-grid columnconfigure	$p 1 -weight 1
-grid rowconfigure	$p 1 -weight 1
-
-
-ttk::scrollbar	$s -orient vertical -command "$w yview"
-grid 			$s -column 2 -row 1 -padx "0 2" -sticky nsew
-
-set dTBL $w
 #
 #==========================================================================================================
 
