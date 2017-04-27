@@ -69,11 +69,13 @@ proc show varname {
 # ---------------------------------------------------------------------------------------------------------
 #
 package require http
+package require tls
 #
 #==========================================================================================================
 
 
-
+tls::init -tls1 true -ssl2 false -ssl3 false
+http::register https 443 tls::socket
 
 
 #==========================================================================================================
@@ -243,6 +245,7 @@ proc showHistoryInformation {} {
 
 
 
+
 #==========================================================================================================
 # Elemente im .i-Teil des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
@@ -253,8 +256,8 @@ set w $p.pdfUrlLBL
 label					$w -text Url
 grid					$w -column 1 -row 1 -padx 2 -pady 2 -sticky nsew
 
-set kw 14
-set pdfName             Darmstadt_Speiseplan_$kw.KW.pdf
+set kw 17
+set pdfName             Darmstadt_Speiseplan_KW_${kw}.pdf
 set pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$pdfName
 
 set w $p.pdfUrlENT
@@ -262,13 +265,34 @@ entry					$w -textvariable pdfUrl -width 80 -justify right
 grid					$w -column 2 -row 1 -padx 2 -pady 2 -sticky nsew
 $w						xview moveto 1.0
 
-exec wget $pdfUrl
-vwait forever
+set w $p.pdfDownloadBTN
+button					$w -text Download -command downloadPdf
+grid					$w -column 3 -row 1 -padx 2 -pady 2 -sticky nsew
 #
 #==========================================================================================================
 
 
 
+
+
+#==========================================================================================================
+# Procs für den .i-Teil (Header) des Hauptfensters
+# ---------------------------------------------------------------------------------------------------------
+#
+proc downloadPdf {} {
+	set um [http::geturl $::pdfUrl -binary 1]
+	set pdfRawData [http::data $um]
+	http::cleanup $um
+	set fp [ open $::pdfName w ]
+    fconfigure $fp -translation binary
+    puts -nonewline $fp $pdfRawData
+	close $fp
+}
+#
+#==========================================================================================================
+
+
+vwait forever
 
 
 #==========================================================================================================
