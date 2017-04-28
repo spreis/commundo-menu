@@ -279,6 +279,25 @@ grid					$w -column 3 -row 1 -padx 2 -pady 2 -sticky nsew
 # Procs für den .i-Teil (Header) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
+array set correctionDays { Mon 6 Tue 7 Wed 8 Thu 9 Fri 3 Sat 4 Sun 5 }
+proc calendarWeekOf {datestring} {
+	set dateseconds [clock scan $datestring -format %d.%m.%Y]
+	set numberOfDayInYear [ clock format $dateseconds -format %j ]
+	set year [ clock format $dateseconds -format %Y]
+	set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
+	set weekDayShort [ clock format $dateseconds -format %a ]
+    set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
+    puts "$weekDay1Jan $formel"
+    set calendarWeek [ expr $formel ]
+    puts $calendarWeek
+    if { ! $calendarWeek } {
+		set calendarWeek [ calendarWeekOf 31.12.[expr $year - 1] ]
+	}
+	return $calendarWeek
+}
+#
+# ---------------------------------------------------------------------------------------------------------
+#
 proc downloadPdf {} {
 	set um [http::geturl $::pdfUrl -binary 1]
 	set pdfRawData [http::data $um]
