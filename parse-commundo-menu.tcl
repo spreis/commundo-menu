@@ -68,6 +68,11 @@ proc show varname {
 # Pakete, die wir benötigen
 # ---------------------------------------------------------------------------------------------------------
 #
+set     ourLibs [ file join $progHomeFolder lib ]
+lappend auto_path "$ourLibs"
+
+package require logwin
+
 package require http
 package require tls
 #
@@ -280,6 +285,10 @@ grid					$w -column 3 -row 1 -padx 2 -pady 2 -sticky nsew
 set w $p.pdfToTxtBTN
 button					$w -text {to Text} -command pdfToTxt
 grid					$w -column 3 -row 2 -padx 2 -pady 2 -sticky nsew
+
+set w $p.parseTxtBTN
+button					$w -text {Parse Text} -command parseTxt
+grid					$w -column 3 -row 3 -padx 2 -pady 2 -sticky nsew
 #
 #==========================================================================================================
 
@@ -327,111 +336,21 @@ proc pdfToTxt {} {
 	}
 }
 #
-#==========================================================================================================
-
-
-
-vwait forever
-
-
-#==========================================================================================================
-# Funktionen für den .i-Teil des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-proc lineInDeplTableSelected { } {
-	# ja, nix erstmal
-}
-#
-# ---------------------------------------------------------------------------------------------------------
-#
-
-
-
-if [ string is integer $updateCycleMinutes ] {
-	if { $updateCycleMinutes < 1 } {
-		set secondsBetweenUpdate 60
-	} else {
-		set secondsBetweenUpdate [ expr { $updateCycleMinutes * 60 } ]
-	}
-} else {
-	set secondsBetweenUpdate $updateCycleMinutesDefault
-}
-
-set stepsOfProgressBar 20
-set sleepSeconds [ expr { $secondsBetweenUpdate / $stepsOfProgressBar } ]
-set odoMeter 0
-
-proc keepTableUpToDate {} {
-	while 1 {
-		incr ::odoMeter
-		set ::remainingSteps $::stepsOfProgressBar
-		.f.barON configure -height $::remainingSteps  -bg orange
-		.f.upd configure -state disabled
-		update
-		updateTable
-		if  { ! ( $::odoMeter % 9 ) } { grid $::dStripLBL -column 1 -row 2; if [ catch dStrip ] { $::dStripLBL configure -text {:(} } }
-		.f.barON configure -bg seagreen 
-		while { $::remainingSteps > 0 } {
-			.f.barON configure -height $::remainingSteps
-			after [ expr { 1000 * $::sleepSeconds } ] { incr ::remainingSteps -1 }
-			.f.upd configure -state normal
-			tkwait variable ::remainingSteps
+proc parseTxt {} {
+	foreach tag [ dict keys $::cropValues ] {
+		set fp [ open $tag.txt r ]
+		::logwin::writeLine .l ===============================$tag
+		while { -1 != [ gets $fp l ] } {
+			::logwin::writeLine .l ">$l<"
 		}
-		
+		close $fp
+		::logwin::enableCloseButton .l
 	}
 }
 #
-# ---------------------------------------------------------------------------------------------------------
-#
-proc updateTable {} {
-	set isTagVersionRE {(\d+)-([[:upper:]]+_\d+\.\d+\.\d+\.\d+_[[:upper:]])_(\d+\.\d+)-(\w+)}
-	set isBranchVersionRE {(\d+)-([[:upper:]]+_\d+\.\d+\.\d+\.\d+_[[:upper:]])_branch-(\w+)}
-	
-	set dTblBG [ $::dTBL cget -bg ]
-	$::dTBL configure -bg orange
-	
-	set previousSortcolumn	[ $::dTBL sortcolumn ]
-	set previousSortorder	[ $::dTBL sortorderlist ]
-	$::dTBL delete 0 end
-	
-	set exList $::excludeEnvironmentsList
-	foreach e $::allEnvs {
-		if { "-1" == [ lsearch $exList $e ] } {
-			set lsDoc [ dom parse [ exec $::svn ls --xml $::environmentURL/$e/trunk/deploying ] ]
-			foreach entry [ $lsDoc selectNodes /lists/list/entry ] {
-				set node		[ $entry selectNodes name ]
-				set name		[ $node text ]		
-				set node		[ $entry selectNodes commit/date ]
-				set dateTimeZ	[ $node text ]
-				set timeStamp 	[ clock scan [ string range $dateTimeZ 0 18 ]  -format "%Y-%m-%dT%H:%M:%S" -gmt 1  ]
-				set dateTime	[ clock format $timeStamp -format "%Y-%m-%d %H:%M" ]
-				set node		[ $entry selectNodes commit/author ]
-				set author		[ $node text ]
-				set isTagVersion	[ regexp $isTagVersionRE $name -> rev branchname tagVersion modDir ]
-				set isBranchVersion	[ regexp $isBranchVersionRE $name -> rev branchname modDir ]
-				if $isTagVersion {
-					scan $tagVersion {%d.%d} majVer minVer
-					set ver $majVer.$minVer
-				} elseif $isBranchVersion {
-					set ver branch
-				} else { 
-					error "In $envURL liegt Dreck rum ($name)!"
-					exit 1
-				}
-				set relname [ ::mrutil::getReleasenameFromBranch $branchname ]
-				$::dTBL insert end [ list $e $author $dateTime $relname $ver $modDir ]
-				if { -1 != $previousSortcolumn } {
-					$::dTBL sortbycolumn $previousSortcolumn -$previousSortorder
-				}
-			}
-		}
-	} 
-	set ::updateTimestamp [ clock format [ clock seconds ] -format {%Y-%m-%d %H:%M} ]
-	$::dTBL configure -bg $dTblBG
-}
-#
 #==========================================================================================================
-
 
 
 
@@ -440,20 +359,6 @@ proc updateTable {} {
 # Elemente im .f-Teil (Footer) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-#grid [ttk::button	.f.fbBTN -text "Feedback"		-command "browseURL $feedbackURL"		]	-row 1 -column 1 -padx 2 -pady 2 -sticky w
-#grid [ttk::label	.f.fbLBL -text "Wer nicht sagt, was er will, braucht sich nicht wundern, was er kriegt!" ]	-row 1 -column 2 -padx 2 -pady 2 -sticky w
-grid [frame	.f.barBG  -height 22 -width 5 -relief groove -bg ivory -bd 1 ]	-row 1 -column 4 -padx 2 -pady 3 -sticky se
-grid [frame	.f.barON  -height 0 -width 3 -relief flat -bd 0 -bg gray ]	-row 1 -column 4 -padx 3 -pady 4 -sticky se
-set updateTimestamp ""
-grid [ttk::label	.f.updLBL -text Stand ]	-row 1 -column 1 -padx 2 -pady 2 -sticky w
-grid [ttk::entry	.f.updENT -textvariable updateTimestamp -width 15 -state readonly ]	-row 1 -column 2 -padx 2 -pady 2 -sticky w
-if { "1" == $updateCycleMinutes } {
-	set cycleText "wird jede Minute aktualisiert."
-} else {
-	set cycleText "wird alle $updateCycleMinutes Minuten aktualisiert."
-}
-grid [ttk::label	.f.cycLBL -text $cycleText ]	-row 1 -column 3 -padx 2 -pady 2 -sticky w
-grid [ttk::button	.f.upd  -text Aktualisieren	-command { set 	remainingSteps 0} -state disabled ]	-row 1 -column 5 -padx 2 -pady 2 -sticky e
 grid [ttk::button	.f.canc -text Schließen		-command "pressedClose"	]			-row 1 -column 6 -padx 2 -pady 2 -sticky e
 grid [ttk::button	.f.help -text Hilfe			-command "browseURL $helpURL"		]	-row 1 -column 7 -padx 2 -pady 2 -sticky e
 grid columnconfigure .f 3 -weight 1
@@ -468,7 +373,7 @@ grid columnconfigure .f 3 -weight 1
 # Procs für den .f-Teil (Footer) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-proc pressedClose 	{ } { eval after cancel [ after info ] ; exit }
+proc pressedClose 	{ } { exit }
 # ---------------------------------------------------------------------------------------------------------
 proc browseURL {url}    { 
     exec $::env(ComSpec) /c start $url &
@@ -487,36 +392,5 @@ proc browseURL {url}    {
 wm protocol . WM_DELETE_WINDOW {
     pressedClose
 }
-#
-#==========================================================================================================
-
-
-
-#==========================================================================================================
-# Strip-Display
-# ---------------------------------------------------------------------------------------------------------
-#
-proc dStrip {} {
-	http::config -proxyhost 192.168.1.112 -proxyport 3128
-	set du [base64::decode aHR0cDovL2RpbGJlcnQuY29tLw==]
-	set um [http::geturl $du]
-	regexp -nocase {class="comic-item".*?data-image="([^"]+)"} [http::data $um] to picurl
-	http::cleanup $um
-	set um [http::geturl $picurl]
-	set pic [http::data $um]
-	http::cleanup $um
-	image create photo dbt -data $pic
-	$::dStripLBL configure -image dbt
-}
-#
-#==========================================================================================================
-
-
-
-#==========================================================================================================
-# Start nach Aufbau des Hauptfensters
-# ---------------------------------------------------------------------------------------------------------
-#
-keepTableUpToDate
 #
 #==========================================================================================================
