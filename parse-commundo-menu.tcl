@@ -94,8 +94,8 @@ set helpURL 		https://github.com/spreis/commundo-menu
 set cropValues {
 	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
 	Dienstag   { -layout -x 452 -y 220 -W 150 -H 300 }
-	Mittwoch   { -layout -x  10 -y 230 -W 130 -H 300 -f 2 }
-	Donnerstag { -layout -x 150 -y 230 -W 120 -H 300 -f 2 }
+	Mittwoch   { -layout -x  10 -y 230 -W 170 -H 300 -f 2 }
+	Donnerstag { -layout -x 150 -y 230 -W 140 -H 300 -f 2 }
 	Freitag    { -layout -x 282 -y 230 -W 140 -H 300 -f 2 }
 }
 #
@@ -343,8 +343,8 @@ proc parseTxt {} {
 		set fp [ open $tag.txt r ]
 		::logwin::writeLine .l ===============================$tag
 		set menuNr 0
-		set menuText($menuNr) ""
-		set menuCent($menuNr) ""
+		array unset menuText
+		array unset menuCent
 		set foundOneMainCourse 0
 		set expect weekDay
 		while { -1 != [ gets $fp l ] } {
@@ -377,6 +377,8 @@ proc parseTxt {} {
 							incr menuNr
 						} else {
 							::logwin::writeLine .l "------ignored-too-cheap-----------"
+							set text ""
+							set menuPrizeCent ""
 							if $foundOneMainCourse {
 								set expect skipTheRest
 							}
@@ -402,6 +404,11 @@ proc parseTxt {} {
 			::logwin::writeLine .l ">$l<"
 		}
 		close $fp
+		foreach n [ array names menuText ] {
+			::logwin::writeLine .l $menuText($n)
+			::logwin::writeLine .l $menuCent($n)
+			::logwin::writeLine .l =====================
+		}
 		::logwin::enableCloseButton .l
 	}
 }
