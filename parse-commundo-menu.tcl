@@ -85,6 +85,14 @@ http::register https 443 tls::socket
 set helpURL 		https://topedia.telekom.de/display/ITPTDP/$::progName
 set helpURL 		https://topedia.telekom.de/x/A6GSAw
 set helpURL 		https://github.com/spreis/commundo-menu
+
+set cropValues {
+	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
+	Dienstag   { -layout -x 452 -y 220 -W 150 -H 300 }
+	Mittwoch   { -layout -x  10 -y 230 -W 130 -H 300 -f 2 }
+	Donnerstag { -layout -x 150 -y 230 -W 120 -H 300 -f 2 }
+	Freitag    { -layout -x 282 -y 230 -W 140 -H 300 -f 2 }
+}
 #
 #==========================================================================================================
 
@@ -268,6 +276,10 @@ $w						xview moveto 1.0
 set w $p.pdfDownloadBTN
 button					$w -text Download -command downloadPdf
 grid					$w -column 3 -row 1 -padx 2 -pady 2 -sticky nsew
+
+set w $p.pdfToTxtBTN
+button					$w -text {to Text} -command pdfToTxt
+grid					$w -column 3 -row 2 -padx 2 -pady 2 -sticky nsew
 #
 #==========================================================================================================
 
@@ -285,7 +297,6 @@ proc calendarWeekOf {datestring} {
 	set numberOfDayInYear [ clock format $dateseconds -format %j ]
 	set year [ clock format $dateseconds -format %Y]
 	set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
-	set weekDayShort [ clock format $dateseconds -format %a ]
     set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
     puts "$weekDay1Jan $formel"
     set calendarWeek [ expr $formel ]
@@ -308,7 +319,16 @@ proc downloadPdf {} {
 	close $fp
 }
 #
+# ---------------------------------------------------------------------------------------------------------
+#
+proc pdfToTxt {} {
+	foreach tag [ dict keys $::cropValues ] {
+		eval "exec [ concat pdftotext [ join [ dict get $::cropValues $tag ] ] $::pdfName $tag.txt ]"
+	}
+}
+#
 #==========================================================================================================
+
 
 
 vwait forever
