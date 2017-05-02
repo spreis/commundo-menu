@@ -343,10 +343,11 @@ proc parseTxt {} {
 		set fp [ open $tag.txt r ]
 		::logwin::writeLine .l ===============================$tag
 		set menuNr 0
+		set menuText($menuNr) ""
+		set menuCent($menuNr) ""
+		set foundOneMainCourse 0
 		set expect weekDay
 		while { -1 != [ gets $fp l ] } {
-			set menuText($menuNr) ""
-			set menuCent($menuNr) ""
 			switch $expect { 
 				weekDay { 
 					if [ regexp {\w+} $l w ] {
@@ -362,15 +363,41 @@ proc parseTxt {} {
 					
 				}
 				menuLines {
-					if [ regexp {\s+(\d+),(\d+)\s+} $l -> euro cent ] {
-						set menuCent($menuNr) [ expr 100 * $euro + $cent ]
-						::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
-					}
 					if [ regexp {enth\wlt} $l -> ] {
-						incr menuNr
-						::logwin::writeLine .l "menuNr: $menuNr"
+						if { $menuPrizeCent > 150 } {
+							set foundOneMainCourse 1
+							set menuText($menuNr) [ string trim $text ]
+							set menuCent($menuNr) $menuPrizeCent
+							::logwin::writeLine .l "----------------------------------"
+							::logwin::writeLine .l "menuNr: $menuNr"
+							::logwin::writeLine .l "menuText($menuNr): >$menuText($menuNr)<"
+							::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
+							::logwin::writeLine .l "=================================="
+							set text ""
+							incr menuNr
+						} else {
+							::logwin::writeLine .l "------ignored-too-cheap-----------"
+							if $foundOneMainCourse {
+								set expect skipTheRest
+							}
+						}
+
+					} elseif [ regexp {(.+)\s+(\d+),(\d+)\s+\S} $l -> linetext euro cent ] {
+						set menuPrizeCent [ expr 100 * $euro + $cent ]
+						append text " " [string trim $linetext]
+						::logwin::writeLine .l "1 text: >$text<"
+						::logwin::writeLine .l "1 menuPrizeCent: >$menuPrizeCent<"
+					} elseif [ regexp -line {^(\s*)(\d+),(\d+)\s+\S\s*$} $l -> space euro cent ] {
+						set menuPrizeCent [ expr 100 * $euro + $cent ]
+						::logwin::writeLine .l "2 menuPrizeCent: >$menuPrizeCent<"
+					} elseif { ! [string is space $l] } {
+						append text " " [string trim $l]
+						::logwin::writeLine .l "3 text: >$text<"
 					}
 			    }
+			    skipTheRest {
+					::logwin::writeLine .l "skipTheRest>$l<"
+				}
 			}
 			::logwin::writeLine .l ">$l<"
 		}
