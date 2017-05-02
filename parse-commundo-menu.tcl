@@ -342,7 +342,36 @@ proc parseTxt {} {
 	foreach tag [ dict keys $::cropValues ] {
 		set fp [ open $tag.txt r ]
 		::logwin::writeLine .l ===============================$tag
+		set menuNr 0
+		set expect weekDay
 		while { -1 != [ gets $fp l ] } {
+			set menuText($menuNr) ""
+			set menuCent($menuNr) ""
+			switch $expect { 
+				weekDay { 
+					if [ regexp {\w+} $l w ] {
+						::logwin::writeLine .l "Wochentag: >$w<"
+						set expect dateMonth
+					}
+				}
+				dateMonth {
+					if [ regexp {(\d+)\.\s*(\w+)} $l -> date monthname ] {
+						::logwin::writeLine .l "Datum: >$date<, Monat: >$monthname<"
+						set expect menuLines
+					}
+					
+				}
+				menuLines {
+					if [ regexp {\s+(\d+),(\d+)\s+} $l -> euro cent ] {
+						set menuCent($menuNr) [ expr 100 * $euro + $cent ]
+						::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
+					}
+					if [ regexp {enth\wlt} $l -> ] {
+						incr menuNr
+						::logwin::writeLine .l "menuNr: $menuNr"
+					}
+			    }
+			}
 			::logwin::writeLine .l ">$l<"
 		}
 		close $fp
