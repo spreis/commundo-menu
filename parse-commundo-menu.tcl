@@ -357,7 +357,8 @@ proc parseTxt {} {
 		set fp [ open $tag.txt r ]
 		::logwin::writeLine .l ===============================$tag
 		set menuNr 0
-		array unset menuText
+		array unset menuTitle
+		array unset menuDesc
 		array unset menuCent
 		set foundOneMainCourse 0
 		set expect weekDay
@@ -380,11 +381,30 @@ proc parseTxt {} {
 					if [ regexp {enth\wlt} $l -> ] {
 						if { $menuPrizeCent > 150 } {
 							set foundOneMainCourse 1
-							set menuText($menuNr) [ string trim $text ]
+							set title ""
+							set desc ""
+							set inTitle 1
+							# Kombi- Menü zu Kombi-Menü
+							regsub -all {(\w\w\w+\-) (\w+)} [ string trim $text ] {\1\2} text
+							# mit dem ersten klein geschriebenen Wort beginnt die Desc, vorher ist es Title
+							foreach word $text {
+								set firstChar [ string index $word 0 ]
+								if [ string is lower $firstChar ] {
+									set inTitle 0
+								}
+								if $inTitle {
+									lappend title $word
+								} else {
+									lappend desc $word
+								}
+							}
+							set menuTitle($menuNr) $title
+							set menuDesc($menuNr) $desc
 							set menuCent($menuNr) $menuPrizeCent
 							::logwin::writeLine .l "----------------------------------"
 							::logwin::writeLine .l "menuNr: $menuNr"
-							::logwin::writeLine .l "menuText($menuNr): >$menuText($menuNr)<"
+							::logwin::writeLine .l "menuTitle($menuNr): >$menuTitle($menuNr)<"
+							::logwin::writeLine .l "menuDesc($menuNr): >$menuDesc($menuNr)<"
 							::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
 							::logwin::writeLine .l "=================================="
 							set text ""
@@ -418,8 +438,10 @@ proc parseTxt {} {
 			::logwin::writeLine .l ">$l<"
 		}
 		close $fp
-		foreach n [ array names menuText ] {
-			::logwin::writeLine .l $menuText($n)
+		::logwin::writeLine .l ============================================================================
+		foreach n [ array names menuTitle ] {
+			::logwin::writeLine .l $menuTitle($n)
+			::logwin::writeLine .l $menuDesc($n)
 			::logwin::writeLine .l $menuCent($n)
 			::logwin::writeLine .l =====================
 		}
