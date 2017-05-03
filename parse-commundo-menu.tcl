@@ -265,9 +265,20 @@ proc showHistoryInformation {} {
 #
 set p .i		;# p wie Parent
 
+set row 1
+
+set w $p.kwLBL
+label					$w -text Kalenderwoche
+grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nsew
+
+set w $p.kwENT
+entry					$w -textvariable kw -width 4 -justify right
+grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
+incr row
+
 set w $p.pdfUrlLBL
 label					$w -text Url
-grid					$w -column 1 -row 1 -padx 2 -pady 2 -sticky nsew
+grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nsew
 
 set kw 17
 set pdfName             Darmstadt_Speiseplan_KW_${kw}.pdf
@@ -275,20 +286,23 @@ set pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload
 
 set w $p.pdfUrlENT
 entry					$w -textvariable pdfUrl -width 80 -justify right
-grid					$w -column 2 -row 1 -padx 2 -pady 2 -sticky nsew
+grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsew
 $w						xview moveto 1.0
 
 set w $p.pdfDownloadBTN
 button					$w -text Download -command downloadPdf
-grid					$w -column 3 -row 1 -padx 2 -pady 2 -sticky nsew
+grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
+incr row
 
 set w $p.pdfToTxtBTN
 button					$w -text {to Text} -command pdfToTxt
-grid					$w -column 3 -row 2 -padx 2 -pady 2 -sticky nsew
+grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
+incr row
 
 set w $p.parseTxtBTN
 button					$w -text {Parse Text} -command parseTxt
-grid					$w -column 3 -row 3 -padx 2 -pady 2 -sticky nsew
+grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
+incr row
 #
 #==========================================================================================================
 
