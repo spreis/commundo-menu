@@ -98,6 +98,21 @@ set cropValues {
 	Donnerstag { -layout -x 150 -y 230 -W 140 -H 300 -f 2 }
 	Freitag    { -layout -x 282 -y 230 -W 140 -H 300 -f 2 }
 }
+
+array set mon3 {
+	Januar Jan
+	Februar Feb
+	März Mar
+	April Apr
+	Mai May
+	Juni Jun
+	Juli Jul
+	August Aug
+	September Sep
+	Oktober Oct
+	November Nov
+	Dezember Dec
+}
 #
 #==========================================================================================================
 
@@ -267,9 +282,19 @@ set p .i		;# p wie Parent
 
 set row 1
 
+set w $p.yearLBL
+label					$w -text Jahr
+grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
+
+set year 2017
+set w $p.yearENT
+entry					$w -textvariable year -width 4 -justify right
+grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
+incr row
+
 set w $p.kwLBL
 label					$w -text Kalenderwoche
-grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nsew
+grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
 set w $p.kwENT
 entry					$w -textvariable kw -width 4 -justify right
@@ -278,7 +303,7 @@ incr row
 
 set w $p.pdfUrlLBL
 label					$w -text Url
-grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nsew
+grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
 set kw 17
 set pdfName             Darmstadt_Speiseplan_KW_${kw}.pdf
@@ -353,6 +378,8 @@ proc pdfToTxt {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc parseTxt {} {
+	set jf [ open 1.json w ]
+	set firstEntry 1
 	foreach tag [ dict keys $::cropValues ] {
 		set fp [ open $tag.txt r ]
 		::logwin::writeLine .l ===============================$tag
@@ -407,6 +434,20 @@ proc parseTxt {} {
 							::logwin::writeLine .l "menuDesc($menuNr): >$menuDesc($menuNr)<"
 							::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
 							::logwin::writeLine .l "=================================="
+							if $firstEntry {
+								puts $jf "    \{"
+								set firstEntry 0
+							} else {
+								puts $jf "    \},    \{"
+							}
+
+							puts $jf  [ format {      "title": "%s",} $title ]
+							puts $jf  [ format {      "description": "%s",} $desc ]
+							puts $jf  [ format {      "prize": "%s",} $menuPrizeCent ]
+							puts $jf  [ format {      "starts": "%s %02d %s 11:34:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
+							puts $jf  [ format {      "ends": "%s %02d %s 14:00:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
+							puts $jf  {      "category": "Lunch",}
+							puts $jf  {      "ingredients": []}
 							set text ""
 							incr menuNr
 						} else {
@@ -447,6 +488,8 @@ proc parseTxt {} {
 		}
 		::logwin::enableCloseButton .l
 	}
+	puts $jf "    \}"
+	close $jf
 }
 #
 #==========================================================================================================
