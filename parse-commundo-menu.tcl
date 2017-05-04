@@ -121,6 +121,28 @@ array set mon3 {
 
 
 #==========================================================================================================
+# Log-Messages
+# ---------------------------------------------------------------------------------------------------------
+# 
+#
+set msg_w .logwindow
+proc msg { severity text } {
+	set sev [ string toupper [ string range $severity 0 0 ] ]
+	set msgtxt "${::progName}_$sev $text"
+	switch $sev {
+		I { ::logwin::writeLine $::msg_w $msgtxt }
+		W { ::logwin::writeWarn $::msg_w $msgtxt }
+		E { ::logwin::writeErr  $::msg_w $msgtxt }
+	}
+}
+#
+#==========================================================================================================
+
+
+
+
+
+#==========================================================================================================
 # Kommandozeilenparser
 # ---------------------------------------------------------------------------------------------------------
 # http://wiki.tcl.tk/17342
@@ -382,7 +404,7 @@ proc parseTxt {} {
 	set firstEntry 1
 	foreach tag [ dict keys $::cropValues ] {
 		set fp [ open $tag.txt r ]
-		::logwin::writeLine .l ===============================$tag
+		msg i "Processing day >$tag<"
 		set menuNr 0
 		array unset menuTitle
 		array unset menuDesc
@@ -390,16 +412,17 @@ proc parseTxt {} {
 		set foundOneMainCourse 0
 		set expect weekDay
 		while { -1 != [ gets $fp l ] } {
+			msg i "Processing line >$l<"
 			switch $expect { 
 				weekDay { 
 					if [ regexp {\w+} $l w ] {
-						::logwin::writeLine .l "Wochentag: >$w<"
+						msg i "Found weekday in PDF: >$w<"
 						set expect dateMonth
 					}
 				}
 				dateMonth {
 					if [ regexp {(\d+)\.\s*(\w+)} $l -> date monthname ] {
-						::logwin::writeLine .l "Datum: >$date<, Monat: >$monthname<"
+						msg i "Found day in PDF, date: >$date<, monthname: >$monthname<"
 						set expect menuLines
 					}
 					
@@ -425,15 +448,9 @@ proc parseTxt {} {
 									lappend desc $word
 								}
 							}
-							set menuTitle($menuNr) $title
-							set menuDesc($menuNr) $desc
-							set menuCent($menuNr) $menuPrizeCent
-							::logwin::writeLine .l "----------------------------------"
-							::logwin::writeLine .l "menuNr: $menuNr"
-							::logwin::writeLine .l "menuTitle($menuNr): >$menuTitle($menuNr)<"
-							::logwin::writeLine .l "menuDesc($menuNr): >$menuDesc($menuNr)<"
-							::logwin::writeLine .l "menuCent($menuNr): >$menuCent($menuNr)<"
-							::logwin::writeLine .l "=================================="
+							msg i "Found Enthält line. title >$title<"
+							msg i "Found Enthält line. desc >$desc<"
+							msg i "Found Enthält line. menuPrizeCent >$menuPrizeCent<"
 							if $firstEntry {
 								puts $jf "    \{"
 								set firstEntry 0
@@ -451,42 +468,34 @@ proc parseTxt {} {
 							set text ""
 							incr menuNr
 						} else {
-							::logwin::writeLine .l "------ignored-too-cheap-----------"
+							msg i "Menu ignored too cheap"
 							set text ""
-							set menuPrizeCent ""
+							set menuPrizeCent 0
 							if $foundOneMainCourse {
 								set expect skipTheRest
+								msg i "Ignoring the rest of menus for this day."
 							}
 						}
 
 					} elseif [ regexp {(.+)\s+(\d+),(\d+)\s+\S} $l -> linetext euro cent ] {
 						set menuPrizeCent [ expr 100 * $euro + $cent ]
 						append text " " [string trim $linetext]
-						::logwin::writeLine .l "1 text: >$text<"
-						::logwin::writeLine .l "1 menuPrizeCent: >$menuPrizeCent<"
+						msg i "Prize detected on line with other text, text appended, now: >$text<, menuPrizeCent: >$menuPrizeCent<"
 					} elseif [ regexp -line {^(\s*)(\d+),(\d+)\s+\S\s*$} $l -> space euro cent ] {
 						set menuPrizeCent [ expr 100 * $euro + $cent ]
-						::logwin::writeLine .l "2 menuPrizeCent: >$menuPrizeCent<"
+						msg i "Prize detected on line, menuPrizeCent: >$menuPrizeCent<"
 					} elseif { ! [string is space $l] } {
 						append text " " [string trim $l]
-						::logwin::writeLine .l "3 text: >$text<"
+						msg i "Text found, appended. Now text: >$text<"
 					}
 			    }
 			    skipTheRest {
-					::logwin::writeLine .l "skipTheRest>$l<"
+					msg i "In skip-mode, line >$l<"
 				}
 			}
-			::logwin::writeLine .l ">$l<"
 		}
 		close $fp
-		::logwin::writeLine .l ============================================================================
-		foreach n [ array names menuTitle ] {
-			::logwin::writeLine .l $menuTitle($n)
-			::logwin::writeLine .l $menuDesc($n)
-			::logwin::writeLine .l $menuCent($n)
-			::logwin::writeLine .l =====================
-		}
-		::logwin::enableCloseButton .l
+		::logwin::enableCloseButton $::msg_w
 	}
 	puts $jf "    \}"
 	close $jf
