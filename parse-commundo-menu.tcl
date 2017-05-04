@@ -318,18 +318,22 @@ set w $p.kwLBL
 label					$w -text Kalenderwoche
 grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
-set w $p.kwENT
-entry					$w -textvariable kw -width 4 -justify right
+set w $p.kwSBX
+tk::spinbox				$w -from 1 -to 53 -justify right -increment 1 -width 3 -textvariable kw -command kwChanged
 grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
 incr row
+
+proc kwChanged {} {
+	set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
+	set ::pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$::pdfName
+}
+set kw 18
+kwChanged
 
 set w $p.pdfUrlLBL
 label					$w -text Url
 grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
-set kw 17
-set pdfName             Darmstadt_Speiseplan_KW_${kw}.pdf
-set pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$pdfName
 
 set w $p.pdfUrlENT
 entry					$w -textvariable pdfUrl -width 80 -justify right
@@ -428,7 +432,8 @@ proc parseTxt {} {
 					}
 				}
 				dateMonth {
-					if [ regexp {(\d+)\.\s*(\w+)} $l -> date monthname ] {
+					if [ regexp {(\d+)\.\s*(\w+)} $l -> datestring monthname ] {
+						scan $datestring {%d} date
 						msg i "Found day in PDF, date: >$date<, monthname: >$monthname<"
 						set expect menuLines
 					}
