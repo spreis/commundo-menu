@@ -92,7 +92,7 @@ set helpURL 		https://topedia.telekom.de/x/A6GSAw
 set helpURL 		https://github.com/spreis/commundo-menu
 
 set cropValues {
-	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
+	Montag     { -layout -x 300 -y 220 -W 140 -H 300 }
 	Dienstag   { -layout -x 452 -y 220 -W 150 -H 300 }
 	Mittwoch   { -layout -x  10 -y 230 -W 140 -H 300 -f 2 }
 	Donnerstag { -layout -x 150 -y 230 -W 140 -H 300 -f 2 }
@@ -489,11 +489,11 @@ proc parseTxt {} {
 							}
 						}
 
-					} elseif [ regexp {(.+)\s+(\d+),(\d+)\s+\S} $l -> linetext euro cent ] {
+					} elseif [ regexp {(.+)\s+(\d+),(\d+)\s+\u20ac} $l -> linetext euro cent ] {
 						set menuPrizeCent [ expr 100 * $euro + $cent ]
 						append text " " [string trim $linetext]
 						msg i "Prize detected on line with other text, text appended, now: >$text<, menuPrizeCent: >$menuPrizeCent<"
-					} elseif [ regexp -line {^(\s*)(\d+),(\d+)\s+\S\s*$} $l -> space euro cent ] {
+					} elseif [ regexp -line {^(\s*)(\d+),(\d+)\s+\u20ac\s*$} $l -> space euro cent ] {
 						set menuPrizeCent [ expr 100 * $euro + $cent ]
 						msg i "Prize detected on line, menuPrizeCent: >$menuPrizeCent<"
 					} elseif { ! [string is space $l] } {
