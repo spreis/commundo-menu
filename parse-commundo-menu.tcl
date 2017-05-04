@@ -401,6 +401,13 @@ proc pdfToTxt {} {
 #
 proc parseTxt {} {
 	set jf [ open 1.json w ]
+	puts $jf "\{
+  \"restaurantID\": \"commundo-darmstadt\",
+  \"lat\": \"49.863080\",
+  \"long\": \"8.626300\",
+  \"title\": \"Commundo\",
+  \"description\": \"Tagungshotel und Restaurant\",
+  \"offers\": \["
 	set firstEntry 1
 	foreach tag [ dict keys $::cropValues ] {
 		set fp [ open $tag.txt r ]
@@ -497,7 +504,9 @@ proc parseTxt {} {
 		close $fp
 		::logwin::enableCloseButton $::msg_w
 	}
-	puts $jf "    \}"
+	puts $jf "    \}
+ \]
+\}"
 	close $jf
 }
 #
