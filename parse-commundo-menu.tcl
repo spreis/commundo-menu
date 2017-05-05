@@ -92,11 +92,11 @@ set helpURL 		https://topedia.telekom.de/x/A6GSAw
 set helpURL 		https://github.com/spreis/commundo-menu
 
 set cropValues {
-	Montag     { -layout -x 300 -y 220 -W 140 -H 300 }
-	Dienstag   { -layout -x 452 -y 220 -W 150 -H 300 }
-	Mittwoch   { -layout -x  10 -y 230 -W 140 -H 300 -f 2 }
-	Donnerstag { -layout -x 150 -y 230 -W 140 -H 300 -f 2 }
-	Freitag    { -layout -x 282 -y 230 -W 140 -H 300 -f 2 }
+	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
+	Dienstag   { -layout -x 445 -y 220 -W 150 -H 300 }
+	Mittwoch   { -layout -x  0 -y 220 -W 140 -H 300 -f 2 }
+	Donnerstag { -layout -x 140 -y 220 -W 140 -H 300 -f 2 }
+	Freitag    { -layout -x 260 -y 220 -W 140 -H 300 -f 2 }
 }
 
 array set mon3 {
@@ -414,15 +414,49 @@ proc parseTxt {} {
   \"offers\": \["
 	set firstEntry 1
 	foreach tag [ dict keys $::cropValues ] {
-		set fp [ open $tag.txt r ]
 		msg i "Processing day >$tag<"
+		set fp [ open $tag.txt r ]
+		set allLinesOfCurrentFile [ split [ read $fp ] "\n" ]
+		close $fp
+		set linesOfWeekDay_stillTooLong {}
+		set euroColumn 0
+		set copyTheLine 0
+		msg i "allLinesOfCurrentFile >[ join $allLinesOfCurrentFile "<\n>" ]<"
+		foreach l $allLinesOfCurrentFile {
+			if [ regexp -line {^\s*(\w+)\s*$} $l -> einsamesWort] {
+				if [ string equal $einsamesWort $tag ] {
+					set copyTheLine 1
+					msg i "Expected day of week detected >$tag<"
+				} else {
+					if { $einsamesWort in [ dict keys $::cropValues ] } {
+						msg i "Found >$einsamesWort< as single word on line. Seems to be a week day. Copying stopped."
+						set copyTheLine 0
+					}
+				}
+			}
+			if $copyTheLine {
+				set euroColumnInThisLine [ string first "\u20ac" $l ]
+				if { $euroColumn < $euroColumnInThisLine } {
+					set euroColumn $euroColumnInThisLine
+				}
+				lappend linesOfWeekDay_stillTooLong $l
+			}
+		}
+		if { ! $euroColumn } {
+			msg i "No Euro sign found during copying $tag. Skipping this day."
+			continue
+		}
+		msg i "linesOfWeekDay_stillTooLong >[ join $linesOfWeekDay_stillTooLong "<\n>" ]<"
+		set linesOfWeekDay {}
+
+		foreach l $linesOfWeekDay_stillTooLong {
+			lappend linesOfWeekDay [ string range $l 0 $euroColumn ]
+		}
+		msg i "linesOfWeekDay >[ join $linesOfWeekDay "<\n>" ]<"
 		set menuNr 0
-		array unset menuTitle
-		array unset menuDesc
-		array unset menuCent
 		set foundOneMainCourse 0
 		set expect weekDay
-		while { -1 != [ gets $fp l ] } {
+		foreach l $linesOfWeekDay {
 			msg i "Processing line >$l<"
 			switch $expect { 
 				weekDay { 
@@ -481,14 +515,15 @@ proc parseTxt {} {
 							incr menuNr
 						} else {
 							msg i "Menu ignored too cheap"
-							set text ""
-							set menuPrizeCent 0
 							if $foundOneMainCourse {
 								set expect skipTheRest
 								msg i "Ignoring the rest of menus for this day."
 							}
 						}
-
+						set text ""
+						set title ""
+						set desc ""
+						set menuPrizeCent 0
 					} elseif [ regexp {(.+)\s+(\d+),(\d+)\s+\u20ac} $l -> linetext euro cent ] {
 						set menuPrizeCent [ expr 100 * $euro + $cent ]
 						append text " " [string trim $linetext]
@@ -506,7 +541,6 @@ proc parseTxt {} {
 				}
 			}
 		}
-		close $fp
 		::logwin::enableCloseButton $::msg_w
 	}
 	puts $jf "    \}
