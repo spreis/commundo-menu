@@ -393,17 +393,27 @@ proc calendarWeekOfDateSeconds dateseconds {
 #
 # ---------------------------------------------------------------------------------------------------------
 #
+proc assurePDF {} {
+	if { ! [ file exists $::pdfName ] } {
+		set ::pdfState Downloading...
+		update
+		downloadPdf
+	}
+	set ::pdfState [ clock format  [ file mtime $::pdfName ] -format {%Y-%m-%d %H:%M:%S} ]
+}
+#
+# ---------------------------------------------------------------------------------------------------------
+#
 proc pressedDiese {} {
 	set ::kw [ calendarWeekOfDateSeconds [clock seconds] ]
-	
+	assurePDF
 }
 #
 # ---------------------------------------------------------------------------------------------------------
 #
 proc pressedNaechste {} {
 	set ::kw [ calendarWeekOfDateSeconds [ expr [clock seconds] + 7 * 86400 ] ]
-	
-
+	assurePDF
 }
 #
 # ---------------------------------------------------------------------------------------------------------
@@ -627,3 +637,10 @@ wm protocol . WM_DELETE_WINDOW {
 }
 #
 #==========================================================================================================
+
+
+
+if [ file exists $::pdfName ] {
+	set ::pdfState [ clock format  [ file mtime $::pdfName ] -format {%Y-%m-%d %H:%M:%S} ]
+}
+
