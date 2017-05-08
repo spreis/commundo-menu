@@ -367,18 +367,22 @@ incr row
 #
 array set correctionDays { Mon 6 Tue 7 Wed 8 Thu 9 Fri 3 Sat 4 Sun 5 }
 proc calendarWeekOf {datestring} {
-	set dateseconds [clock scan $datestring -format %d.%m.%Y]
-	set numberOfDayInYear [ clock format $dateseconds -format %j ]
-	set year [ clock format $dateseconds -format %Y]
-	set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
+    set dateseconds [clock scan $datestring -format %d.%m.%Y]
+    set numberOfDayInYear [ clock format $dateseconds -format %j ]
+    set year [ clock format $dateseconds -format %Y]
+    set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
     set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
-    puts "$weekDay1Jan $formel"
+    # puts "$weekDay1Jan $formel"
     set calendarWeek [ expr $formel ]
-    puts $calendarWeek
+    # puts $calendarWeek
     if { ! $calendarWeek } {
-		set calendarWeek [ calendarWeekOf 31.12.[expr $year - 1] ]
-	}
-	return $calendarWeek
+        set calendarWeek [ calendarWeekOf 31.12.[expr $year - 1] ]
+    } elseif { $calendarWeek == 53 } {
+      if { [ clock format [ clock scan 01.01.[expr $year + 1] -format %d.%m.%Y] -format %a] in "Tue Wed Thu" } {
+        set calendarWeek 1
+      }
+    }
+   return $calendarWeek
 }
 #
 # ---------------------------------------------------------------------------------------------------------
