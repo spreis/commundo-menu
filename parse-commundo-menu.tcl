@@ -323,13 +323,6 @@ tk::spinbox				$w -from 1 -to 53 -justify right -increment 1 -width 3 -textvaria
 grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
 incr row
 
-proc kwChanged {} {
-	set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
-	set ::pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$::pdfName
-}
-set kw 18
-kwChanged
-
 set w $p.pdfUrlLBL
 label					$w -text Url
 grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
@@ -366,15 +359,13 @@ incr row
 # ---------------------------------------------------------------------------------------------------------
 #
 array set correctionDays { Mon 6 Tue 7 Wed 8 Thu 9 Fri 3 Sat 4 Sun 5 }
-proc calendarWeekOf {datestring} {
-    set dateseconds [clock scan $datestring -format %d.%m.%Y]
+proc calendarWeekOfToday {} {
+    set dateseconds [clock seconds]
     set numberOfDayInYear [ clock format $dateseconds -format %j ]
     set year [ clock format $dateseconds -format %Y]
     set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
     set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
-    # puts "$weekDay1Jan $formel"
     set calendarWeek [ expr $formel ]
-    # puts $calendarWeek
     if { ! $calendarWeek } {
         set calendarWeek [ calendarWeekOf 31.12.[expr $year - 1] ]
     } elseif { $calendarWeek == 53 } {
@@ -387,6 +378,13 @@ proc calendarWeekOf {datestring} {
 #
 # ---------------------------------------------------------------------------------------------------------
 #
+proc kwChanged {} {
+	set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
+	set ::pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$::pdfName
+}
+set kw [ calendarWeekOfToday ]
+kwChanged
+
 proc downloadPdf {} {
 	set um [http::geturl $::pdfUrl -binary 1]
 	set pdfRawData [http::data $um]
