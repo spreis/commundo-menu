@@ -91,6 +91,8 @@ set helpURL 		https://topedia.telekom.de/display/ITPTDP/$::progName
 set helpURL 		https://topedia.telekom.de/x/A6GSAw
 set helpURL 		https://github.com/spreis/commundo-menu
 
+set folderUrl		https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt
+
 set cropValues {
 	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
 	Dienstag   { -layout -x 445 -y 220 -W 150 -H 300 }
@@ -314,39 +316,53 @@ entry					$w -textvariable year -width 4 -justify right
 grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
 incr row
 
-set w $p.kwLBL
-label					$w -text Kalenderwoche
+
+set w $p.folderUrlLBL
+label					$w -text "Folder Url"
 grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
-set w $p.kwSBX
-tk::spinbox				$w -from 1 -to 53 -justify right -increment 1 -width 3 -textvariable kw -command kwChanged
-grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
-incr row
-
-set w $p.pdfUrlLBL
-label					$w -text Url
-grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
-
-
-set w $p.pdfUrlENT
-entry					$w -textvariable pdfUrl -width 80 -justify right
-grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsew
+set w $p.folderUrlENT
+entry					$w -textvariable folderUrl -width 80 -justify right
+grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsew -columnspan 5
 $w						xview moveto 1.0
-
-set w $p.pdfDownloadBTN
-button					$w -text Download -command downloadPdf
-grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
 incr row
+set col 1
 
-set w $p.pdfToTxtBTN
-button					$w -text {to Text} -command pdfToTxt
-grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
-incr row
 
-set w $p.parseTxtBTN
-button					$w -text {Parse Text} -command parseTxt
-grid					$w -column 3 -row $row -padx 2 -pady 2 -sticky nsew
+set w $p.wocheLBL
+label					$w -text Woche -justify center
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew -columnspan 1
 incr row
+set col 1
+
+
+set w $p.dieseBTN
+button					$w -text Diese -command pressedDiese
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew
+incr col
+
+set w $p.naechsteBTN
+button					$w -text Nächste -command pressedNaechste
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsw
+incr col
+
+set w $p.pdfNameLBL
+label					$w -text "PDF-Datei"
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nse
+incr col
+
+set w $p.pdfNameENT
+entry					$w -textvariable pdfName -width 24
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nswe
+incr col
+
+set w $p.pdfStateLBL
+set pdfState	""
+label					$w -textvariable pdfState
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nse
+incr row
+set col 1
+
 #
 #==========================================================================================================
 
@@ -359,15 +375,14 @@ incr row
 # ---------------------------------------------------------------------------------------------------------
 #
 array set correctionDays { Mon 6 Tue 7 Wed 8 Thu 9 Fri 3 Sat 4 Sun 5 }
-proc calendarWeekOfToday {} {
-    set dateseconds [clock seconds]
+proc calendarWeekOfDateSeconds dateseconds {
     set numberOfDayInYear [ clock format $dateseconds -format %j ]
     set year [ clock format $dateseconds -format %Y]
     set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
     set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
     set calendarWeek [ expr $formel ]
     if { ! $calendarWeek } {
-        set calendarWeek [ calendarWeekOf 31.12.[expr $year - 1] ]
+        set calendarWeek [ calendarWeekOfDateSeconds [expr $dateseconds - 7 * 86400] ]
     } elseif { $calendarWeek == 53 } {
       if { [ clock format [ clock scan 01.01.[expr $year + 1] -format %d.%m.%Y] -format %a] in "Tue Wed Thu" } {
         set calendarWeek 1
@@ -378,12 +393,29 @@ proc calendarWeekOfToday {} {
 #
 # ---------------------------------------------------------------------------------------------------------
 #
-proc kwChanged {} {
+proc pressedDiese {} {
+	set ::kw [ calendarWeekOfDateSeconds [clock seconds] ]
+	
+}
+#
+# ---------------------------------------------------------------------------------------------------------
+#
+proc pressedNaechste {} {
+	set ::kw [ calendarWeekOfDateSeconds [ expr [clock seconds] + 7 * 86400 ] ]
+	
+
+}
+#
+# ---------------------------------------------------------------------------------------------------------
+#
+proc kwChanged args {
 	set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
 	set ::pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$::pdfName
 }
-set kw [ calendarWeekOfToday ]
-kwChanged
+
+trace add variable kw write kwChanged
+set kw [ calendarWeekOfDateSeconds [clock seconds] ]
+
 
 proc downloadPdf {} {
 	set um [http::geturl $::pdfUrl -binary 1]
