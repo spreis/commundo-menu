@@ -363,6 +363,31 @@ grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nse
 incr row
 set col 1
 
+set w 	$p.n
+ttk::notebook 			$w
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew -columnspan 8
+
+set p $w
+foreach day [ dict keys $::cropValues ] {
+	set w $p.f$day
+	ttk::frame $w
+	$p add $w -text $day
+	set nCol 1
+	foreach l { x y W H } {
+		set nw $w.e${l}LBL
+		label			$nw -text $l:
+		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
+		incr nCol
+
+		set nw $w.e${l}SBX
+		tk::spinbox 	$nw -from 0 -to 999 -width 5 -textvariable unit($day,$l)
+		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
+		incr nCol
+		
+		
+	}
+}
+
 #
 #==========================================================================================================
 
