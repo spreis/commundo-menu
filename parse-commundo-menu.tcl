@@ -5,20 +5,21 @@
 #
 set progHomeFolder [ file dirname  $argv0 ]
 set progName [ file rootname [ file tail $argv0 ] ]
-set progVers 0.1.0
 
 set progHeadline {
 Download der PDF-Datei mit der Speisekarte,
 raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
+set versHist {
+0.2.0
+    Tabs for reviewing every day of the week
+0.1.0
+    Download of pdf-File
+}
+set progVers [ lindex $versHist 0 ]
 
 wm title . "$progName - $progVers"
-
-set versHist {
-0.1.0
-	Download of pdf-File
-}
 #
 #==========================================================================================================
 
