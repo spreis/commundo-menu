@@ -102,6 +102,38 @@ set cropValues {
 	Freitag    { -layout -x 260 -y 220 -W 140 -H 300 -f 2 }
 }
 
+
+array set crop {
+	Montag,x 300
+	Montag,y 220
+	Montag,W 150
+	Montag,H 300
+
+	Dienstag,x 445
+	Dienstag,y 220
+	Dienstag,W 150
+	Dienstag,H 300
+
+    Mittwoch,x 0
+    Mittwoch,y 20
+    Mittwoch,W 140
+    Mittwoch,H 300
+    Mittwoch,f 2
+
+    Donnerstag,x 140 
+    Donnerstag,y 220
+    Donnerstag,W 140
+    Donnerstag,H 300
+    Donnerstag,f 2
+
+    Freitag,x 260
+    Freitag,y 220
+    Freitag,W 140
+    Freitag,H 300
+    Freitag,f 2
+}
+set daySequence [ list Montag Dienstag Mittwoch Donnerstag Freitag ]
+
 array set mon3 {
 	Januar Jan
 	Februar Feb
@@ -369,19 +401,19 @@ ttk::notebook 			$w
 grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew -columnspan 8
 
 set p $w
-foreach day [ dict keys $::cropValues ] {
+foreach day $daySequence {
 	set w $p.f$day
 	ttk::frame $w
 	$p add $w -text $day
 	set nCol 1
-	foreach l { x y W H } {
+	foreach l { x y W H f } {
 		set nw $w.e${l}LBL
 		label			$nw -text $l:
 		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
 		incr nCol
 
 		set nw $w.e${l}SBX
-		tk::spinbox 	$nw -from 0 -to 999 -width 5 -textvariable unit($day,$l)
+		tk::spinbox 	$nw -from 0 -to 999 -width 5 -textvariable crop($day,$l)
 		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
 		incr nCol
 		
