@@ -406,19 +406,34 @@ foreach day $daySequence {
 	ttk::frame $w
 	$p add $w -text $day
 	set nCol 1
+	set nRow 1
 	foreach l { x y W H f } {
 		set nw $w.e${l}LBL
 		label			$nw -text $l:
-		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
+		grid			$nw -column $nCol -row $nRow -padx 2 -pady 2 -sticky nsew
 		incr nCol
 
 		set nw $w.e${l}SBX
 		tk::spinbox 	$nw -from 0 -to 999 -width 5 -textvariable crop($day,$l)
-		grid			$nw -column $nCol -row $row -padx 2 -pady 2 -sticky nsew
+		grid			$nw -column $nCol -row $nRow -padx 2 -pady 2 -sticky nsew
 		incr nCol
 		
-		
 	}
+	set nCol 1
+	incr nRow
+	set nw $w.e${l}FME
+	frame       	$nw 
+	grid			$nw -column $nCol -row $nRow -padx 2 -pady 2 -sticky nsew -columnspan 8
+	incr nCol
+
+	set nCol 1
+	incr nRow
+	set fw $nw.blockTXT
+	set sw $nw.blockVSB
+	text              $fw -height 24 -yscrollcommand "$sw set"
+	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
+	grid              $fw -row $nRow -column $nCol -sticky nsew
+	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
 }
 
 #
