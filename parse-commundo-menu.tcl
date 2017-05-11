@@ -434,6 +434,7 @@ foreach day $daySequence {
 	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
 	grid              $fw -row $nRow -column $nCol -sticky nsew
 	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
+	set blockTXTw($day) $fw
 }
 
 #
@@ -480,6 +481,7 @@ proc assurePDF {} {
 proc pressedDiese {} {
 	set ::kw [ calendarWeekOfDateSeconds [clock seconds] ]
 	assurePDF
+	pdfToTxt
 }
 #
 # ---------------------------------------------------------------------------------------------------------
@@ -487,6 +489,7 @@ proc pressedDiese {} {
 proc pressedNaechste {} {
 	set ::kw [ calendarWeekOfDateSeconds [ expr [clock seconds] + 7 * 86400 ] ]
 	assurePDF
+	pdfToTxt
 }
 #
 # ---------------------------------------------------------------------------------------------------------
@@ -513,8 +516,16 @@ proc downloadPdf {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc pdfToTxt {} {
-	foreach tag [ dict keys $::cropValues ] {
-		eval "exec [ concat pdftotext [ join [ dict get $::cropValues $tag ] ] $::pdfName $tag.txt ]"
+	foreach tag $::daySequence {
+		
+		set pdftotextCMD [ format "pdftotext -x %d -y %d -W %d -H %d" $::crop($tag,x) $::crop($tag,y) $::crop($tag,W) $::crop($tag,H)]
+		if $::crop($tag,f) { append pdftotextCMD " -f $::crop($tag,f)" }
+		append pdftotextCMD " $::pdfName $tag.txt"
+		eval "exec $pdftotextCMD"
+		set fp [ open $tag.txt r ]
+		set blockText [ read $fp ]
+		close $fp
+        $::blockTXTw($tag) insert 1.0 $blockText
 	}
 }
 #
