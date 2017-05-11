@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.3.0
+    Tabs engaged with clipping coordinates
 0.2.0
     Tabs for reviewing every day of the week
 0.1.0
@@ -430,7 +432,7 @@ foreach day $daySequence {
 	incr nRow
 	set fw $nw.blockTXT
 	set sw $nw.blockVSB
-	text              $fw -height 24 -yscrollcommand "$sw set"
+	text              $fw -height 24 -width 60 -yscrollcommand "$sw set"
 	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
 	grid              $fw -row $nRow -column $nCol -sticky nsew
 	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
@@ -482,6 +484,7 @@ proc pressedDiese {} {
 	set ::kw [ calendarWeekOfDateSeconds [clock seconds] ]
 	assurePDF
 	pdfToTxt
+	parseTxt
 }
 #
 # ---------------------------------------------------------------------------------------------------------
@@ -490,6 +493,7 @@ proc pressedNaechste {} {
 	set ::kw [ calendarWeekOfDateSeconds [ expr [clock seconds] + 7 * 86400 ] ]
 	assurePDF
 	pdfToTxt
+	parseTxt
 }
 #
 # ---------------------------------------------------------------------------------------------------------
@@ -518,13 +522,14 @@ proc downloadPdf {} {
 proc pdfToTxt {} {
 	foreach tag $::daySequence {
 		
-		set pdftotextCMD [ format "pdftotext -x %d -y %d -W %d -H %d" $::crop($tag,x) $::crop($tag,y) $::crop($tag,W) $::crop($tag,H)]
+		set pdftotextCMD [ format "pdftotext -layout -x %d -y %d -W %d -H %d" $::crop($tag,x) $::crop($tag,y) $::crop($tag,W) $::crop($tag,H)]
 		if $::crop($tag,f) { append pdftotextCMD " -f $::crop($tag,f)" }
 		append pdftotextCMD " $::pdfName $tag.txt"
 		eval "exec $pdftotextCMD"
 		set fp [ open $tag.txt r ]
 		set blockText [ read $fp ]
 		close $fp
+        $::blockTXTw($tag) delete 1.0 end
         $::blockTXTw($tag) insert 1.0 $blockText
 	}
 }
