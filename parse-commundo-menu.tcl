@@ -12,8 +12,10 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.3.1
+	Daily opening time to 11:30
 0.3.0
-    Tabs engaged with clipping coordinates
+    Tabs engaged with clipping coordinates, writing json file
 0.2.0
     Tabs for reviewing every day of the week
 0.1.0
@@ -640,7 +642,7 @@ proc parseTxt {} {
 							puts $jf  [ format {      "title": "%s",} $title ]
 							puts $jf  [ format {      "description": "%s",} $desc ]
 							puts $jf  [ format {      "prize": "%s",} $menuPrizeCent ]
-							puts $jf  [ format {      "starts": "%s %02d %s 11:34:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
+							puts $jf  [ format {      "starts": "%s %02d %s 11:30:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
 							puts $jf  [ format {      "ends": "%s %02d %s 14:00:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
 							puts $jf  {      "category": "Lunch",}
 							puts $jf  {      "ingredients": []}
