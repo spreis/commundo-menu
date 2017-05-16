@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.4.0
+    Crop values saved now for better start when trying next week
 0.3.1
 	Daily opening time to 11:30
 0.3.0
@@ -469,8 +471,8 @@ proc calendarWeekOfDateSeconds dateseconds {
 #
 # ---------------------------------------------------------------------------------------------------------
 #
-proc saveCropValues {} {
-	set fc [ open cropValues.tcl w ]
+proc saveCropValues fileName {
+	set fc [ open $fileName w ]
 	puts $fc "array set crop \{"
 	foreach i [ array names ::crop ] {
 		puts $fc "  $i $::crop($i)"
@@ -718,7 +720,9 @@ grid columnconfigure .f 3 -weight 1
 # ---------------------------------------------------------------------------------------------------------
 #
 proc pressedClose 	{ } { 
-	saveCropValues
+	saveCropValues cropValues.tcl
+	saveCropValues cropValues_${::year}-$::kw.tcl
+
 	exit
 }
 # ---------------------------------------------------------------------------------------------------------
