@@ -98,16 +98,7 @@ set helpURL 		https://github.com/spreis/commundo-menu
 
 set folderUrl		https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt
 
-set cropValues {
-	Montag     { -layout -x 300 -y 220 -W 150 -H 300 }
-	Dienstag   { -layout -x 445 -y 220 -W 150 -H 300 }
-	Mittwoch   { -layout -x  0 -y 220 -W 140 -H 300 -f 2 }
-	Donnerstag { -layout -x 140 -y 220 -W 140 -H 300 -f 2 }
-	Freitag    { -layout -x 260 -y 220 -W 140 -H 300 -f 2 }
-}
-
-
-array set crop {
+array set cropDefault {
 	Montag,x 300
 	Montag,y 220
 	Montag,W 150
@@ -136,6 +127,13 @@ array set crop {
     Freitag,H 300
     Freitag,f 2
 }
+
+if [ catch { source cropValues.tcl } ] {
+	foreach i [ array names ::cropDefault ] {
+		set ::crop($i) $::cropDefault($i)
+	}
+}
+
 set daySequence [ list Montag Dienstag Mittwoch Donnerstag Freitag ]
 
 array set mon3 {
@@ -471,6 +469,18 @@ proc calendarWeekOfDateSeconds dateseconds {
 #
 # ---------------------------------------------------------------------------------------------------------
 #
+proc saveCropValues {} {
+	set fc [ open cropValues.tcl w ]
+	puts $fc "array set crop \{"
+	foreach i [ array names ::crop ] {
+		puts $fc "  $i $::crop($i)"
+	}
+	puts $fc "\}"
+	close $fc
+}
+#
+# ---------------------------------------------------------------------------------------------------------
+#
 proc assurePDF {} {
 	if { ! [ file exists $::pdfName ] } {
 		set ::pdfState Downloading...
@@ -548,7 +558,7 @@ proc parseTxt {} {
   \"description\": \"Tagungshotel und Restaurant\",
   \"offers\": \["
 	set firstEntry 1
-	foreach tag [ dict keys $::cropValues ] {
+	foreach tag $::daySequence {
 		msg i "Processing day >$tag<"
 		set fp [ open $tag.txt r ]
 		set allLinesOfCurrentFile [ split [ read $fp ] "\n" ]
@@ -563,7 +573,7 @@ proc parseTxt {} {
 					set copyTheLine 1
 					msg i "Expected day of week detected >$tag<"
 				} else {
-					if { $einsamesWort in [ dict keys $::cropValues ] } {
+					if { $einsamesWort in $::daySequence } {
 						msg i "Found >$einsamesWort< as single word on line. Seems to be a week day. Copying stopped."
 						set copyTheLine 0
 					}
@@ -707,7 +717,10 @@ grid columnconfigure .f 3 -weight 1
 # Procs für den .f-Teil (Footer) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-proc pressedClose 	{ } { exit }
+proc pressedClose 	{ } { 
+	saveCropValues
+	exit
+}
 # ---------------------------------------------------------------------------------------------------------
 proc browseURL {url}    { 
     exec $::env(ComSpec) /c start $url &
