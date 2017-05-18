@@ -12,6 +12,10 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.5.1
+	React on "Aus dem Wok:" Title should be not the single word "Aus"
+0.5.0
+	Daily Checkwindow added. JSON-File gets nicer name
 0.4.0
     Crop values saved now for better start when trying next week
 0.3.1
@@ -639,16 +643,19 @@ proc parseTxt {} {
 							set inTitle 1
 							# Kombi- Menü zu Kombi-Menü
 							regsub -all {(\w\w\w+\-) (\w+)} [ string trim $text ] {\1\2} text
-							# mit dem ersten klein geschriebenen Wort beginnt die Desc, vorher ist es Title
-							foreach word $text {
-								set firstChar [ string index $word 0 ]
-								if [ string is lower $firstChar ] {
-									set inTitle 0
-								}
-								if $inTitle {
-									lappend title $word
-								} else {
-									lappend desc $word
+							# mit dem ersten klein geschriebenen Wort beginnt die Desc, vorher ist es Title - Zuerst aber noch Aus dem Wok: mittels :-Suchen retten.
+							if [ regexp -line {^\s*([^:]+)\s*:\s*(.+)$} $text -> title desc ] {
+							} else {
+								foreach word $text {
+									set firstChar [ string index $word 0 ]
+									if [ string is lower $firstChar ] {
+										set inTitle 0
+									}
+									if $inTitle {
+										lappend title $word
+									} else {
+										lappend desc $word
+									}
 								}
 							}
 							msg i "Found Enthält line. title >$title<"
