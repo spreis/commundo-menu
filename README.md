@@ -7,8 +7,8 @@ Columns for cropping vary from week to week on source PDF
 
 * Tcl/Tk 8.5
 * Tcl http
-* Tcl tls
-* Poppler Tools
+* Tcl tls `sudo apt-get install tcltls`
+* Poppler Tools `sudo apt-get install poppler-utils`
 
 # OS tested
 
