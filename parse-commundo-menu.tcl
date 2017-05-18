@@ -434,11 +434,20 @@ foreach day $daySequence {
 	incr nRow
 	set fw $nw.blockTXT
 	set sw $nw.blockVSB
-	text              $fw -height 24 -width 60 -yscrollcommand "$sw set"
+	text              $fw -height 24 -width 50 -yscrollcommand "$sw set"
 	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
 	grid              $fw -row $nRow -column $nCol -sticky nsew
 	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
 	set blockTXTw($day) $fw
+
+	incr nCol 3
+	set fw $nw.resultTXT
+	set sw $nw.resultVSB
+	text              $fw -height 24 -width 40 -wrap word -yscrollcommand "$sw set"
+	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
+	grid              $fw -row $nRow -column $nCol -sticky nsew
+	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
+	set resultTXTw($day) $fw
 }
 
 #
@@ -551,7 +560,7 @@ proc pdfToTxt {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc parseTxt {} {
-	set jf [ open 1.json w ]
+	set jf [ open Commundo-Speiseplan_${::year}-$::kw.json w ]
 	puts $jf "\{
   \"restaurantID\": \"commundo-darmstadt\",
   \"lat\": \"49.863080\",
@@ -565,6 +574,7 @@ proc parseTxt {} {
 		set fp [ open $tag.txt r ]
 		set allLinesOfCurrentFile [ split [ read $fp ] "\n" ]
 		close $fp
+		$::resultTXTw($tag) delete 1.0 end
 		set linesOfWeekDay_stillTooLong {}
 		set euroColumn 0
 		set copyTheLine 0
@@ -658,6 +668,7 @@ proc parseTxt {} {
 							puts $jf  [ format {      "ends": "%s %02d %s 14:00:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
 							puts $jf  {      "category": "Lunch",}
 							puts $jf  {      "ingredients": []}
+							$::resultTXTw($tag) insert end "$menuPrizeCent\n>$title<\n$desc\n====================\n"
 							set text ""
 							incr menuNr
 						} else {
