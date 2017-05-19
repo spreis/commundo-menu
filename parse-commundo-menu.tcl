@@ -369,14 +369,6 @@ $w						xview moveto 1.0
 incr row
 set col 1
 
-
-set w $p.wocheLBL
-label					$w -text Woche -justify center
-grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew -columnspan 1
-incr row
-set col 1
-
-
 set w $p.dieseBTN
 button					$w -text Diese -command pressedDiese
 grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsew
@@ -384,6 +376,11 @@ incr col
 
 set w $p.naechsteBTN
 button					$w -text Nächste -command pressedNaechste
+grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsw
+incr col
+
+set w $p.wocheLBL
+label					$w -text Woche
 grid					$w -column $col -row $row -padx 2 -pady 2 -sticky nsw
 incr col
 
