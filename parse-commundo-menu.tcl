@@ -428,7 +428,7 @@ foreach day $daySequence {
 	incr nRow
 	set nw $w.e${l}FME
 	frame       	$nw 
-	grid			$nw -column $nCol -row $nRow -padx 2 -pady 2 -sticky nsew -columnspan 8
+	grid			$nw -column $nCol -row $nRow -padx 2 -pady 2 -sticky nsew -columnspan 12
 	incr nCol
 
 	set nCol 1
@@ -444,7 +444,7 @@ foreach day $daySequence {
 	incr nCol 3
 	set fw $nw.resultTXT
 	set sw $nw.resultVSB
-	text              $fw -height 24 -width 40 -wrap word -yscrollcommand "$sw set"
+	text              $fw -height 24 -width 50 -wrap word -yscrollcommand "$sw set"
 	ttk::scrollbar    $sw -orient vertical -command "$fw yview"
 	grid              $fw -row $nRow -column $nCol -sticky nsew
 	grid              $sw -row $nRow -column [ expr $nCol + 1 ] -sticky nsew
@@ -766,4 +766,55 @@ wm protocol . WM_DELETE_WINDOW {
 if [ file exists $::pdfName ] {
 	set ::pdfState [ clock format  [ file mtime $::pdfName ] -format {%Y-%m-%d %H:%M:%S} ]
 }
+
+$blockTXTw(Montag) insert 1.0 "
+Dieser Bereich zeigt, was das Poppler-Tool
+\"pdftotext\" mit den oben stehenden Crop-Werten
+aus dem PDF für den jeweiligen Wochentag
+ausgeschnitten hat.
+
+Ändere ggf. die Crop-Werte, so dass
+- der Name des Wochentags zu sehen ist,
+- immer \"enthält\" als Gerichtende zu sehen ist,
+- die Preise mit \u20ac-Zeichen zu sehen sind,
+- alle zu übernehmenden Gerichte vollständig
+  zu sehen sind.
+
+Drücke immer wieder \"Nächste\" Woche und
+kontrolliere erneut.
+
+Die Crop-Werte werden für den nächsten Aufruf
+dieses Skripts in der Datei cropValues.tcl
+gepeichert. Lösche die Datei, wenn Du sie nicht
+mehr magst!
+"
+
+$resultTXTw(Montag) insert 1.0 "
+Dieser Bereich zeigt, was der Parser als
+Gericht für den jeweiligen Wochentag übernehmen
+möchte.
+
+Was hier zu sehen ist, steht dann bereits
+in der JSON-Datei in diesem Verzeichnis.
+
+Wie Gerichte übernommen werden:
+
+\"enthält\" wird jeweils als Gerichtende gewertet.
+Liegt der Preis über 150 Cent wird das Gericht
+als Hauptgericht gewertet und übernommen.
+
+Wurde bereits ein Hauptgericht übernommen und
+danach folgt ein Gericht billiger als 150,
+wird Nachtisch angenommen und die Übernahme
+für diesen Tag wird gestoppt.
+
+Mit dem ersten kleingeschriebenen Wort beginnt
+\"desc\". Die Wörter davor werden zum \"title\".
+
+Ausnahme: Wird ein \":\" gefunden, trennt dieser
+\"title\" und \"desc\".
+"
+
+
+
 
