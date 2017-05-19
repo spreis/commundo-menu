@@ -790,12 +790,11 @@ mehr magst!
 "
 
 $resultTXTw(Montag) insert 1.0 "
-Dieser Bereich zeigt, was der Parser als
-Gericht für den jeweiligen Wochentag übernehmen
-möchte.
+Dieser Review-Bereich zeigt, wie die Gerichte für
+den jeweiligen Wochentag übernommen werden.
 
-Was hier zu sehen ist, steht dann bereits
-in der JSON-Datei in diesem Verzeichnis.
+Was hier zu sehen ist, steht dann bereits auch
+schon in der JSON-Datei in diesem Verzeichnis.
 
 Wie Gerichte übernommen werden:
 
