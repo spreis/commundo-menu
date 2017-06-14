@@ -12,6 +12,10 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.5.2
+    crop Values of last Week are now in repository
+      for better start values in a fresh cloned environment
+    commundo changed name of PDF-File in week 25
 0.5.1
 	React on "Aus dem Wok:" Title should be not the single word "Aus"
 0.5.0
@@ -523,7 +527,11 @@ proc pressedNaechste {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc kwChanged args {
-	set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
+	if { $::kw > 24 } {
+		set ::pdfName             Speiseplan_KW_${::kw}.pdf
+    } else {
+		set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
+    }
 	set ::pdfUrl       https://www.commundo-tagungshotels.de/media/Default/user_upload/Speisenpl%C3%A4ne/Darmstadt/$::pdfName
 }
 
