@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.5.3
+	React on: Name of pdf was changed on commundo-page
 0.5.2
     crop Values of last Week are now in repository
       for better start values in a fresh cloned environment
@@ -527,7 +529,9 @@ proc pressedNaechste {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc kwChanged args {
-	if { $::kw > 24 } {
+	if { $::kw > 33 } {
+		set ::pdfName             D_Speiseplan_KW_${::kw}.pdf
+	} elseif { $::kw > 24 } {
 		set ::pdfName             Speiseplan_KW_${::kw}.pdf
     } else {
 		set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
@@ -640,7 +644,7 @@ proc parseTxt {} {
 					
 				}
 				menuLines {
-					if [ regexp {enth\wlt} $l -> ] {
+					if [ regexp {nth\wlt} $l -> ] {
 						if { $menuPrizeCent > 150 } {
 							set foundOneMainCourse 1
 							set title ""
