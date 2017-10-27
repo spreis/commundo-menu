@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.5.4
+	If magic word "enthält" contains spaces. Happened more than once.
 0.5.3
 	React on: Name of pdf was changed on commundo-page
 0.5.2
@@ -644,7 +646,7 @@ proc parseTxt {} {
 					
 				}
 				menuLines {
-					if [ regexp {nth\wlt} $l -> ] {
+					if [ regexp {n\s?t\s?h\s?\w\s?l\s?t} $l -> ] { # enthält mit Leerzeichen suchen
 						if { $menuPrizeCent > 150 } {
 							set foundOneMainCourse 1
 							set title ""
