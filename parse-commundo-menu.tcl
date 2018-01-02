@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.0
+	Simplifications for one-year-use deleted. Commundo continues operating in 2018.
 0.5.4
 	If magic word "enthält" contains spaces. Happened more than once.
 0.5.3
@@ -359,7 +361,7 @@ set w $p.yearLBL
 label					$w -text Jahr
 grid					$w -column 1 -row $row -padx 2 -pady 2 -sticky nse
 
-set year 2017
+set year void
 set w $p.yearENT
 entry					$w -textvariable year -width 4 -justify right
 grid					$w -column 2 -row $row -padx 2 -pady 2 -sticky nsw
@@ -470,25 +472,6 @@ foreach day $daySequence {
 # Procs für den .i-Teil (Header) des Hauptfensters
 # ---------------------------------------------------------------------------------------------------------
 #
-array set correctionDays { Mon 6 Tue 7 Wed 8 Thu 9 Fri 3 Sat 4 Sun 5 }
-proc calendarWeekOfDateSeconds dateseconds {
-    set numberOfDayInYear [ clock format $dateseconds -format %j ]
-    set year [ clock format $dateseconds -format %Y]
-    set weekDay1Jan [ clock format [clock scan 01.01.$year -format %d.%m.%Y] -format %a]
-    set formel "($numberOfDayInYear + $::correctionDays($weekDay1Jan)) / 7"
-    set calendarWeek [ expr $formel ]
-    if { ! $calendarWeek } {
-        set calendarWeek [ calendarWeekOfDateSeconds [expr $dateseconds - 7 * 86400] ]
-    } elseif { $calendarWeek == 53 } {
-      if { [ clock format [ clock scan 01.01.[expr $year + 1] -format %d.%m.%Y] -format %a] in "Tue Wed Thu" } {
-        set calendarWeek 1
-      }
-    }
-   return $calendarWeek
-}
-#
-# ---------------------------------------------------------------------------------------------------------
-#
 proc saveCropValues fileName {
 	set fc [ open $fileName w ]
 	puts $fc "array set crop \{"
@@ -513,7 +496,10 @@ proc assurePDF {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc pressedDiese {} {
-	set ::kw [ calendarWeekOfDateSeconds [clock seconds] ]
+	set when [ clock seconds ] 
+	set ::kw [ clock format $when -format %V ]
+    set ::year [ clock format $when -format %Y]
+
 	assurePDF
 	pdfToTxt
 	parseTxt
@@ -522,7 +508,10 @@ proc pressedDiese {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc pressedNaechste {} {
-	set ::kw [ calendarWeekOfDateSeconds [ expr [clock seconds] + 7 * 86400 ] ]
+	set when [ expr [ clock seconds ] + 7 * 86400 ] 
+	set ::kw [ clock format $when -format %V ]
+    set ::year [ clock format $when -format %Y]
+
 	assurePDF
 	pdfToTxt
 	parseTxt
@@ -531,9 +520,9 @@ proc pressedNaechste {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc kwChanged args {
-	if { $::kw > 33 } {
+	if { "$::year$::kw" > 201733 } {
 		set ::pdfName             D_Speiseplan_KW_${::kw}.pdf
-	} elseif { $::kw > 24 } {
+	} elseif { "$::year$::kw" > 201724 } {
 		set ::pdfName             Speiseplan_KW_${::kw}.pdf
     } else {
 		set ::pdfName             Darmstadt_Speiseplan_KW_${::kw}.pdf
@@ -542,7 +531,7 @@ proc kwChanged args {
 }
 
 trace add variable kw write kwChanged
-set kw [ calendarWeekOfDateSeconds [clock seconds] ]
+set kw void
 
 
 proc downloadPdf {} {
