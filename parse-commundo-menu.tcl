@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.1
+	Format adapted for upload
 0.6.0
 	Simplifications for one-year-use deleted. Commundo continues operating in 2018.
 0.5.4
@@ -152,19 +154,19 @@ if [ catch { source cropValues.tcl } ] {
 
 set daySequence [ list Montag Dienstag Mittwoch Donnerstag Freitag ]
 
-array set mon3 {
-	Januar Jan
-	Februar Feb
-	März Mar
-	April Apr
-	Mai May
-	Juni Jun
-	Juli Jul
-	August Aug
-	September Sep
-	Oktober Oct
-	November Nov
-	Dezember Dec
+array set moncode {
+	Januar 0
+	Februar 1
+	März 2
+	April 3
+	Mai 4
+	Juni 5
+	Juli 6
+	August 7
+	September 8
+	Oktober 9
+	November 10
+	Dezember 11
 }
 #
 #==========================================================================================================
@@ -566,11 +568,6 @@ proc pdfToTxt {} {
 proc parseTxt {} {
 	set jf [ open Commundo-Speiseplan_${::year}-$::kw.json w ]
 	puts $jf "\{
-  \"restaurantID\": \"commundo-darmstadt\",
-  \"lat\": \"49.863080\",
-  \"long\": \"8.626300\",
-  \"title\": \"Commundo\",
-  \"description\": \"Tagungshotel und Restaurant\",
   \"offers\": \["
 	set firstEntry 1
 	foreach tag $::daySequence {
@@ -670,11 +667,9 @@ proc parseTxt {} {
 
 							puts $jf  [ format {      "title": "%s",} $title ]
 							puts $jf  [ format {      "description": "%s",} $desc ]
-							puts $jf  [ format {      "prize": "%s",} $menuPrizeCent ]
-							puts $jf  [ format {      "starts": "%s %02d %s 11:30:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
-							puts $jf  [ format {      "ends": "%s %02d %s 14:00:00 GMT+0100",} $::mon3($monthname) $date $::year  ]
-							puts $jf  {      "category": "Lunch",}
-							puts $jf  {      "ingredients": []}
+							puts $jf  [ format {      "price": "%s",} $menuPrizeCent ]
+							puts $jf  [ format {      "starts": "%d-%d-%d 11:30:00",} $::year $::moncode($monthname) $date  ]
+							puts $jf  [ format {      "ends": "%d-%d-%d 14:00:00"} $::year $::moncode($monthname) $date  ]
 							$::resultTXTw($tag) insert end "$menuPrizeCent\n>$title<\n$desc\n====================\n"
 							set text ""
 							incr menuNr
