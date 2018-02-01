@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.2
+	Format updated after feedback
 0.6.1
 	Format adapted for upload
 0.6.0
@@ -567,8 +569,7 @@ proc pdfToTxt {} {
 #
 proc parseTxt {} {
 	set jf [ open Commundo-Speiseplan_${::year}-$::kw.json w ]
-	puts $jf "\{
-  \"offers\": \["
+	puts $jf "\["
 	set firstEntry 1
 	foreach tag $::daySequence {
 		msg i "Processing day >$tag<"
@@ -704,8 +705,7 @@ proc parseTxt {} {
 		::logwin::enableCloseButton $::msg_w
 	}
 	puts $jf "    \}
- \]
-\}"
+ \]"
 	close $jf
 }
 #
