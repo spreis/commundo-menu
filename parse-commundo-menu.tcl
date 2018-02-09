@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.3
+	Separator string 'enthält' is not reliable any more 3 or more blank lines will also separate 
 0.6.2
 	Format updated after feedback
 0.6.1
@@ -633,7 +635,12 @@ proc parseTxt {} {
 					
 				}
 				menuLines {
-					if [ regexp {n\s?t\s?h\s?\w\s?l\s?t} $l -> ] { # enthält mit Leerzeichen suchen
+					if [ regexp -line {^\s*$} $l -> dummy ] { incr emptyLines } else { set emptyLines 0 }
+					# enthält mit Leerzeichen suchen
+					set trennWordFound [ regexp {n\s?t\s?h\s?\w\s?l\s?t} $l -> dummy ]  
+					if { $emptyLines > 2 || $trennWordFound } {
+						msg i "emptyLines=$emptyLines trennt Gericht"
+						set emptyLines -1000 
 						if { $menuPrizeCent > 150 } {
 							set foundOneMainCourse 1
 							set title ""
