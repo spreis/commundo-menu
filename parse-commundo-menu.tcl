@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.5
+	If a word in title ends with a komma, not punctuation 
 0.6.4
 	If a word in title ends with a komma, the word is the last in title and the rest goes to desc 
 0.6.3
@@ -660,8 +662,7 @@ proc parseTxt {} {
 									}
 									if $inTitle {
 										# Wenn es mit Komma aufhört, war es das letzte Wort für den Titel
-										set endsWithPunc [ string is punc [ string index $word end ] ] 
-										if $endsWithPunc {
+										if [ string equal , [ string index $word end ] ] {
 											set word [ string range $word 0 end-1 ]
 											set inTitle 0
 										}
