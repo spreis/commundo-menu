@@ -12,6 +12,8 @@ raten wo was steht und Ausgabe der Gerichte
 im von der lunchtime-app benötigten Format.
 }
 set versHist {
+0.6.6
+	Fix crash if restaurant is closed on Monday 
 0.6.5
 	If a word in title ends with a komma, not punctuation 
 0.6.4
@@ -574,6 +576,7 @@ proc pdfToTxt {} {
 # ---------------------------------------------------------------------------------------------------------
 #
 proc parseTxt {} {
+	set menuPrizeCent 0
 	set jf [ open Commundo-Speiseplan_${::year}-$::kw.json w ]
 	puts $jf "\["
 	set firstEntry 1
